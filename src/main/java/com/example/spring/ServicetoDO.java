@@ -1,5 +1,6 @@
 package com.example.spring;
 import lombok.Builder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.swing.text.html.Option;
@@ -13,10 +14,12 @@ import java.util.UUID;
 public class ServicetoDO {
 
         private final ApplicationRepository repository;
+    private final UndoService undoService;
 
-        public ServicetoDO (ApplicationRepository repository) {
+    public ServicetoDO (ApplicationRepository repository, UndoService undoService) {
             this.repository = repository;
-        }
+        this.undoService = undoService;
+    }
 
         public List<Todolist> findAll() {
             return repository.findAll();
@@ -38,12 +41,10 @@ public class ServicetoDO {
             });
 
             }
-    public void deleteByid (String id){
+    public void deleteByid (String id) {
         repository.deleteById(id);
-        }
-
-
 
     }
+}
 
 
