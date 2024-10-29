@@ -1,5 +1,6 @@
 package com.example.spring;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.bson.codecs.pojo.annotations.BsonRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController//is it ein controller die nimt Http
@@ -24,12 +26,18 @@ public class ApplicationControle {
         this.undoService = undoService;
     }
 
+//    @GetMapping
+//    public List<Todolist> gettodo(){
+//       return repository.findAll();
+//    }
     @GetMapping
     public List<Todolist> gettodo(){
-       return repository.findAll();
+        if(repository.findAll().isEmpty()) {
+            throw new NoSuchElementException("no todolist");
+        }else return repository.findAll();
     }
    @PostMapping
-    public void addtodolist(@RequestBody Todolist todolist){
+    public void addtodolist(@RequestBody Todolist todolist) throws JsonProcessingException {
        undoService.recordAction(new Action("CREATE", todolist));
         repository.save(todolist);
 
@@ -43,7 +51,7 @@ public class ApplicationControle {
 
             // Perform the update
             repository.todoupdated(todolistupdated, id);
-        }
+        }else throw new RuntimeException("no todo list with this id to updated");
     }
    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable String id){
@@ -60,8 +68,11 @@ public class ApplicationControle {
     }
     @GetMapping("/{id}")
     public Optional<Todolist> getById(@PathVariable String id){
-        System.out.println("the id "+id);
-       return repository.findbyid(id);
+       if(repository.findbyid(id).isPresent()) {
+           throw new NoSuchElementException("no todolist with this id");
+       }
+      else return repository.findbyid(id);
+
     }
 
 //    @PostMapping
@@ -75,7 +86,7 @@ public class ApplicationControle {
 //    }
 
     @DeleteMapping("/undo")
-    public ResponseEntity<String> undoLastChange(String id) {
+    public ResponseEntity<String> undoLastChange(String id) throws JsonProcessingException {
         Action lastAction = undoService.undoLastAction();
         if (lastAction == null) {
             return ResponseEntity.badRequest().body("No actions to undo");
